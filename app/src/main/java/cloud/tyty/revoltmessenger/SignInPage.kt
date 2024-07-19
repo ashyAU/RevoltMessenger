@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,37 +27,36 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import api.session.Response
+import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.json.Json
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
+import kotlin.coroutines.suspendCoroutine
+import kotlin.math.log
+
 
 
 @Preview
 @Composable
-fun LoginButtons() {
-    Column(modifier = Modifier.padding(10.dp))
-    {
-        Button(
-            onClick = { /*TODO*/ },
-            modifier = Modifier.width(120.dp)
-        )
-        {
-            Text("Login")
-        }
-        TextButton(onClick = { /*TODO*/ }) {
-            Text("Create Account")
-        }
-    }
-}
+fun LoginPage(){
 
-@Composable
-fun TextFields() {
+    val session = api.session.API()
+    var loginClick by remember {
+        mutableStateOf(false)
+    }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(modifier = Modifier) {
+    var loginSuccessStatus by remember {
+        mutableStateOf("")
+    }
+
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         TextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { email = it.trim() },
             label = { Text("Email") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
         Spacer(modifier = Modifier.padding(5.dp))
         TextField(
@@ -66,23 +66,27 @@ fun TextFields() {
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
+        Button(
+            onClick = {
+                loginClick = !loginClick
+            },
+            modifier = Modifier.width(120.dp)
+        )
+        {
+            Text("Login")
+        }
+        TextButton(onClick = { /*TODO*/ }) {
+            Text("Create Account")
+        }
+        Text(text = loginSuccessStatus)
+    }
+    LaunchedEffect(loginClick) {
+        val response = session.login(email = email, password = password, friendlyName = "Android")
+
+        if (response != null) {
+            loginSuccessStatus = response.result
+        }
     }
 }
 
-@Preview
-@Composable
-fun LoginPage() {
-
-        Row(
-            modifier = Modifier.fillMaxSize(1f),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        )
-        {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TextFields()
-                LoginButtons()
-            }
-        }
-}
 
